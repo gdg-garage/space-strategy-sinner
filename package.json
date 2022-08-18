@@ -1,0 +1,12 @@
+{
+  "name": "space-strategy-sinner",
+  "version": "0.0.0",
+  "description": "SpaceStrategySinner",
+  "main": "app.js",
+  "author": {
+    "name": "Tomáš Malý"
+  },
+  "dependencies": {
+    "space_tycoon_client": ""
+  }
+}

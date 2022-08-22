@@ -92,6 +92,15 @@ function handleTradeShip(sid, ship, cls) {
 	}
 }
 
+function handleShipyardShip(sid, ship, cls) {
+	if (!cls["shipyard"])
+		return
+	let money = data.players[me]["net-worth"].money
+	if (money < 1000000)
+		return
+	return new STC.ConstructCommand("3", "construct") // 3 = shipper
+}
+
 function compute() {
 	console.log("Tick: " + data["current-tick"].tick + ", Money: " + data.players[me]["net-worth"].money + ", Ships: " + data.players[me]["net-worth"].ships + ", Resources: " + data.players[me]["net-worth"].resources + ", Total: " + data.players[me]["net-worth"].total)
 
@@ -102,7 +111,9 @@ function compute() {
 		if (ship.player !== me)
 			continue
 		let cls = staticData["ship-classes"][ship["ship-class"]]
-		let order = handleTradeShip(sid, ship, cls)
+		let order = handleShipyardShip(sid, ship, cls)
+		if (!order)
+			order = handleTradeShip(sid, ship, cls)
 		if (order)
 			orders[sid] = order
 	}

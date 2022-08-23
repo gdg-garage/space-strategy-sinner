@@ -6,10 +6,23 @@ var currentTick = 0
 var staticData
 var data
 var me
-var forbiddenPlanets = []
+var forbiddenPlanets = {}
 
-function isForbidden(pid) {
-	return forbiddenPlanets.includes(pid)
+function prepareForbidden(pid, rid) {
+	if (typeof forbiddenPlanets[pid] === "undefined")
+		forbiddenPlanets[pid] = {}
+	if (typeof forbiddenPlanets[pid][rid] === "undefined")
+		forbiddenPlanets[pid][rid] = false
+}
+
+function isForbidden(pid, rid) {
+	prepareForbidden(pid, rid)
+	return forbiddenPlanets[pid][rid]
+}
+
+function setForbidden(pid, rid) {
+	prepareForbidden(pid, rid)
+	forbiddenPlanets[pid][rid] = true
 }
 
 function distance(a, b) {
@@ -22,8 +35,6 @@ function findBestToSell(startPos, rid) {
 	let bestGain = 0
 	let result = []
 	for (let pid of Object.keys(data.planets)) {
-		if (isForbidden(pid))
-			continue
 		let planet = data.planets[pid]
 		let resource = planet.resources[rid]
 		if (!resource)
@@ -46,11 +57,11 @@ function findBestToBuy(startPos, capacity) {
 	let bestGain = 0
 	let result = []
 	for (let pid of Object.keys(data.planets)) {
-		if (isForbidden(pid))
-			continue
 		let planet = data.planets[pid]
 		let distToPlanet = distance(startPos, planet.position)
 		for (let rid of Object.keys(planet.resources)) {
+			if (isForbidden(pid, rid))
+				continue
 			let resource = planet.resources[rid]
 			let buyPrice = resource["buy-price"]
 			if (!buyPrice)
@@ -80,13 +91,12 @@ function handleTradeShip(sid, ship, cls) {
 		let resource = ship.resources[rid]
 		let sell = findBestToSell(ship.position, rid)
 		if (sell.length === 3) {
-			forbiddenPlanets.push(sell[0])
 			return new STC.TradeCommand("trade", -resource.amount, rid, sell[0])
 		}
 	} else {
 		let buy = findBestToBuy(ship.position, capacity)
 		if (buy.length === 3) {
-			forbiddenPlanets.push(buy[0])
+			setForbidden(buy[0], buy[1])
 			return new STC.TradeCommand("trade", buy[2], buy[1], buy[0])
 		}
 	}
@@ -104,7 +114,7 @@ function handleShipyardShip(sid, ship, cls) {
 function compute() {
 	console.log("Tick: " + data["current-tick"].tick + ", Money: " + data.players[me]["net-worth"].money + ", Ships: " + data.players[me]["net-worth"].ships + ", Resources: " + data.players[me]["net-worth"].resources + ", Total: " + data.players[me]["net-worth"].total)
 
-	forbiddenPlanets = []
+	forbiddenPlanets = {}
 	let orders = {}
 	for (let sid of Object.keys(data.ships)) {
 		let ship = data.ships[sid]

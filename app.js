@@ -91,13 +91,17 @@ function handleTradeShip(sid, ship, cls) {
 		let resource = ship.resources[rid]
 		let sell = findBestToSell(ship.position, rid)
 		if (sell.length === 3) {
-			return new STC.TradeCommand("trade", -resource.amount, rid, sell[0])
+			let cmd = new STC.TradeCommand(-resource.amount, rid, sell[0])
+			cmd.type = "trade"
+			return cmd
 		}
 	} else {
 		let buy = findBestToBuy(ship.position, capacity)
 		if (buy.length === 3) {
 			setForbidden(buy[0], buy[1])
-			return new STC.TradeCommand("trade", buy[2], buy[1], buy[0])
+			let cmd = new STC.TradeCommand(buy[2], buy[1], buy[0])
+			cmd.type = "trade"
+			return cmd
 		}
 	}
 }
@@ -108,7 +112,9 @@ function handleShipyardShip(sid, ship, cls) {
 	let money = data.players[me]["net-worth"].money
 	if (money < 1000000)
 		return
-	return new STC.ConstructCommand("3", "construct") // 3 = shipper
+	let cmd = new STC.ConstructCommand("3") // 3 = shipper
+	cmd.type = "construct"
+	return cmd
 }
 
 function compute() {
@@ -136,7 +142,7 @@ function compute() {
 
 function timerLoop() {
 	if (!staticData) {
-		(new STC.GameApi()).staticDataGet(function (error, data2, response) {
+		(new STC.GameApi()).staticDataGet({}, function (error, data2, response) {
 			staticData = data2
 		})
 	}
@@ -147,7 +153,7 @@ function timerLoop() {
 			return
 		currentTick = data1.tick
 
-		; (new STC.GameApi()).dataGet(function (error, data3, response) {
+		; (new STC.GameApi()).dataGet({}, function (error, data3, response) {
 			if (staticData) {
 				data = data3
 				if (me !== data["player-id"]) {

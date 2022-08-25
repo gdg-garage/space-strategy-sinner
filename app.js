@@ -1,6 +1,7 @@
 var STC = require("space_tycoon_client")
 STC.ApiClient.instance.basePath = "http://localhost" // for development
 STC.ApiClient.instance.enableCookies = true
+var api = new STC.GameApi
 
 const loginUser = process.argv[2] || "spaceman"
 const loginPassword = process.argv[3] || "123456"
@@ -9,7 +10,7 @@ const loginPlayer = process.argv[4] || loginUser
 var currentTick = 0
 var staticData
 var data
-var me
+var me = -1
 var forbiddenPlanets = {}
 
 function prepareForbidden(pid, rid) {
@@ -141,27 +142,33 @@ function compute() {
 	if (orders.length === 0)
 		return
 
-	(new STC.GameApi()).commandsPost(orders, function (error, data2, response) {})
+	api.commandsPost(orders, function (error, data2, response) {})
 }
 
 function timerLoop() {
 	if (!staticData) {
-		(new STC.GameApi()).staticDataGet({}, function (error, data2, response) {
+		api.staticDataGet({}, function (error, data2, response) {
 			staticData = data2
 		})
 	}
 
-	; (new STC.GameApi()).currentTickGet(function (error, data1, response) {
+	api.currentTickGet(function (error, data1, response) {
+		if (!data1) {
+			login()
+			staticData = undefined
+			return
+		}
+
 		setTimeout(timerLoop, data1["min-time-left-ms"])
 		if (currentTick === data1.tick)
 			return
 		currentTick = data1.tick
 
-		; (new STC.GameApi()).dataGet({}, function (error, data3, response) {
+		api.dataGet({}, function (error, data3, response) {
 			if (staticData) {
 				data = data3
 				if (me !== data["player-id"]) {
-					console.log("invalid player id")
+					console.error("invalid player id")
 					return
 				}
 				compute()
@@ -171,7 +178,8 @@ function timerLoop() {
 }
 
 function login() {
-	(new STC.GameApi()).loginPost({ "username": loginUser, "password": loginPassword, "player": loginPlayer }, function (error, data4, response) {
+	console.log("login as user: " + loginUser + ", player: " + loginPlayer)
+	api.loginPost({ "username": loginUser, "password": loginPassword, "player": loginPlayer }, function (error, data4, response) {
 		me = response.body.id
 		if (!me) {
 			console.error("failed login")

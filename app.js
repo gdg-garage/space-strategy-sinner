@@ -2,6 +2,10 @@ var STC = require("space_tycoon_client")
 STC.ApiClient.instance.basePath = "http://localhost" // for development
 STC.ApiClient.instance.enableCookies = true
 
+const loginUser = process.argv[2] || "spaceman"
+const loginPassword = process.argv[3] || "123456"
+const loginPlayer = process.argv[4] || loginUser
+
 var currentTick = 0
 var staticData
 var data
@@ -167,7 +171,7 @@ function timerLoop() {
 }
 
 function login() {
-	(new STC.GameApi()).loginPost({ "username": "spaceman", "password": "123456", "player": "spaceman" }, function (error, data4, response) {
+	(new STC.GameApi()).loginPost({ "username": loginUser, "password": loginPassword, "player": loginPlayer }, function (error, data4, response) {
 		me = response.body.id
 		if (!me) {
 			console.error("failed login")

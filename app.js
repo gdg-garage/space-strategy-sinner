@@ -31,8 +31,10 @@ function setForbidden(pid, rid) {
 }
 
 function distance(a, b) {
+	// this is not a proper distance function!
+	// this makes the distance less significant
 	let sqr = x => x * x
-	return Math.sqrt(sqr(a[0] - b[0]) + sqr(a[1] - b[1]))
+	return Math.pow(sqr(a[0] - b[0]) + sqr(a[1] - b[1]), 0.25)
 }
 
 // returns [ target, price, distance ]
@@ -115,7 +117,7 @@ function handleShipyardShip(sid, ship, cls) {
 	if (!cls["shipyard"])
 		return
 	let money = data.players[me]["net-worth"].money
-	if (money < 1000000)
+	if (money < 500000)
 		return
 	let cmd = new STC.ConstructCommand("3") // 3 = shipper
 	cmd.type = "construct"
@@ -131,6 +133,12 @@ function compute() {
 		let ship = data.ships[sid]
 		if (ship.player !== me)
 			continue
+		if (ship.command) {
+			let cmd = ship.command
+			if (cmd.type == "trade" && cmd.amount > 0)
+				setForbidden(cmd.target, cmd.resource)
+			continue;
+		}
 		let cls = staticData["ship-classes"][ship["ship-class"]]
 		let order = handleShipyardShip(sid, ship, cls)
 		if (!order)

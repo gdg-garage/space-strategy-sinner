@@ -46,7 +46,7 @@ function findBestToSell(startPos, rid) {
 		let resource = planet.resources[rid]
 		if (!resource)
 			continue
-		let sellPrice = resource["sell-price"]
+		let sellPrice = resource.sellPrice
 		if (!sellPrice)
 			continue
 		let distToPlanet = distance(startPos, planet.position)
@@ -70,7 +70,7 @@ function findBestToBuy(startPos, capacity) {
 			if (isForbidden(pid, rid))
 				continue
 			let resource = planet.resources[rid]
-			let buyPrice = resource["buy-price"]
+			let buyPrice = resource.buyPrice
 			if (!buyPrice)
 				continue
 			let am = Math.min(capacity, resource.amount)
@@ -90,7 +90,7 @@ function findBestToBuy(startPos, capacity) {
 }
 
 function handleTradeShip(sid, ship, cls) {
-	let capacity = cls["cargo-capacity"]
+	let capacity = cls.cargoCapacity
 	if (capacity === 0)
 		return
 	if (Object.keys(ship.resources).length > 0) {
@@ -114,9 +114,9 @@ function handleTradeShip(sid, ship, cls) {
 }
 
 function handleShipyardShip(sid, ship, cls) {
-	if (!cls["shipyard"])
+	if (!cls.shipyard)
 		return
-	let money = data.players[me]["net-worth"].money
+	let money = data.players[me].netWorth.money
 	if (money < 500000)
 		return
 	let cmd = new STC.ConstructCommand("3") // 3 = shipper
@@ -125,7 +125,8 @@ function handleShipyardShip(sid, ship, cls) {
 }
 
 function compute() {
-	console.log("Tick: " + data["current-tick"].tick + ", Money: " + data.players[me]["net-worth"].money + ", Ships: " + data.players[me]["net-worth"].ships + ", Resources: " + data.players[me]["net-worth"].resources + ", Total: " + data.players[me]["net-worth"].total)
+	let myWorth = data.players[me].netWorth
+	console.log("Tick: " + data.currentTick.tick + ", Money: " + myWorth.money + ", Ships: " + myWorth.ships + ", Resources: " + myWorth.resources + ", Total: " + myWorth.total)
 
 	forbiddenPlanets = {}
 	let orders = {}
@@ -139,7 +140,7 @@ function compute() {
 				setForbidden(cmd.target, cmd.resource)
 			continue;
 		}
-		let cls = staticData["ship-classes"][ship["ship-class"]]
+		let cls = staticData.shipClasses[ship.shipClass]
 		let order = handleShipyardShip(sid, ship, cls)
 		if (!order)
 			order = handleTradeShip(sid, ship, cls)
@@ -167,7 +168,7 @@ function timerLoop() {
 			return
 		}
 
-		setTimeout(timerLoop, data1["min-time-left-ms"])
+		setTimeout(timerLoop, data1.minTimeLeftMs)
 		if (currentTick === data1.tick)
 			return
 		currentTick = data1.tick
@@ -175,7 +176,7 @@ function timerLoop() {
 		api.dataGet({}, function (error, data3, response) {
 			if (staticData) {
 				data = data3
-				if (me !== data["player-id"]) {
+				if (me !== data.playerId) {
 					console.error("invalid player id")
 					return
 				}
